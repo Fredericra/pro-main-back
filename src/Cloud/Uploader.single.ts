@@ -15,8 +15,24 @@ const uploadeSigle = async(buffer:Buffer,folder:string):Promise<string>=>{
     })
 }
 
+const uploadeMultiple = async(buffers:Buffer[],folder:string):Promise<string[]>=>{
+    const urls:string[] = []
+    for(const buffer of buffers){
+        const url = await uploadeSigle(buffer,folder)
+        urls.push(url)
+    }
+    return urls;
+}
 
-const uploader = { uploadeSigle }
+const getPublicId = (url:string,folder:string):string=>{
+    const parts = url.split('/');
+    const filename = parts[parts.length -1];
+    if(filename === undefined) return '';
+    const publicId = filename.split('.')[0];
+    return `${folder}/${publicId}`;
+}
+
+const uploader = { uploadeSigle, uploadeMultiple,getPublicId }
 
 export default uploader;
 

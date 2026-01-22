@@ -23,7 +23,7 @@ const Login = async (req: Request, res: Response) => {
           const token = sign(
             { email: users.email,id:newUser._id },
             process.env.SECRET as string,
-            { expiresIn: "1d" }
+            { expiresIn: "2d" }
           );
         return res
           .json(
@@ -93,7 +93,7 @@ const register = async (req: Request, res: Response) => {
         password: password,
       });
       const token = sign({ email: user.email,id:newUser._id }, process.env.SECRET as string, {
-        expiresIn: "1d",
+        expiresIn: "2d",
       });
       const userParams = await database.admin.create({
         _type: "userParams",

@@ -96,3 +96,19 @@ export interface sigin {
     check?:boolean,
     passwordConfirm:string,
 }
+
+export interface article {
+    title: string,
+    code: string,
+    description: string,
+    price: number,
+    device: string,
+    quantity: number,
+    category: string,
+    model: string,
+    size: string,
+    marque: string,
+    heigth: string,
+    width: string,
+    length: string,
+}
