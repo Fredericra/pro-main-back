@@ -19,7 +19,7 @@ const midelware = async(req:Request,res:Response,next:NextFunction)=>{
     const authHeader =  req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1] as string;
 
-    if(!token) return  res.json(await Utility.resParams({status:false,message:'token manquant',field:'tokenManque',data:null})).status(201)
+    if(!token) return res.json(await Utility.resParams({status:false,message:'token manquant',field:'tokenManque',data:null})).status(201)
     try{
     const decoded = Jwt.verify(token,keywebtoke);
     req.user = decoded;

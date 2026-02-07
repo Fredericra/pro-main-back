@@ -20,22 +20,33 @@ const sendEmail =async(data:mail):Promise<void>=>{
 }
 
 
-const sendCode = async(code:string,mail:string):Promise<void>=>{
+const sendCode = async(mail:string,html:string,subject:string):Promise<void>=>{
 
     await sendEmail(
         {
         from:process.env.BOOK_USER as string,
         to:mail,
-        subject:'Confirmation',
-        text:'Bonjour, ',
+        subject:subject,
+        html:html
+      }
+    )
+}
+
+const sendLetter = async(mail:string):Promise<void>=>{
+    await sendEmail({
+        from:process.env.BOOK_USER as string,
+        to:mail,
+        subject:'Vous etes abonne dans notre newsletter',
+        text:'Bonjour, nous avons bien recu votre abonnement et message',
         html:`<div>
-            <p class="margin:4px">votre code de confirmation de compte est <span style="font-size:22;color:blue">${code}</span></p>
-            <p>Merci de votre patiente</p>
+            <p class="margin:4px">
+                Merci de vous etre abonne dans notre newsletter, vous recevrez des nouvelles de nos nouveautes et articles.
+            </p>
         </div>`
       }
     )
 }
-const bookMail = { transporter,sendEmail,sendCode }
+const bookMail = { transporter,sendEmail,sendCode,sendLetter }
 
 
 export default bookMail

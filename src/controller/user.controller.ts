@@ -10,30 +10,31 @@ const Login = async (req: Request, res: Response) => {
   const { data } = req.body;
   try {
     const users = (await Utility.decrypte(data)) as login;
-    const query = '*[_type == "User" && email == $email][0]{...,"set":*[_type == "userParams" && userId._ref == ^._id][0]}';
+    const query =
+      '*[_type == "User" && email == $email][0]{...,"set":*[_type == "userParams" && userId._ref == ^._id][0]}';
     const findUser = await database.admin.fetch(query, { email: users.email });
 
     if (findUser) {
       const newUser = findUser as User;
       const passwordVerify = await bcrypt.compare(
         users.password,
-        newUser.password
+        newUser.password,
       );
       if (passwordVerify) {
-          const token = sign(
-            { email: users.email,id:newUser._id },
-            process.env.SECRET as string,
-            { expiresIn: "2d" }
-          );
+        const token = sign(
+          { email: users.email, id: newUser._id },
+          process.env.SECRET as string,
+          { expiresIn: "2d" },
+        );
         return res
           .json(
             await Utility.resParams({
               message: "access login",
               status: true,
               field: "login",
-              token:token,
-              verify:newUser.set?.verify
-            })
+              token: token,
+              verify: newUser.set?.verify,
+            }),
           )
           .status(201);
       }
@@ -41,8 +42,9 @@ const Login = async (req: Request, res: Response) => {
         await Utility.resParams({
           message: "mots de pass incorect",
           status: false,
-          field:'password'
-        })
+          field: "password",
+          data: null,
+        }),
       );
     } else {
       res.json(
@@ -50,7 +52,8 @@ const Login = async (req: Request, res: Response) => {
           message: "email n'exite pas",
           status: false,
           field: "email",
-        })
+          data: null,
+        }),
       );
     }
   } catch (error) {
@@ -60,8 +63,8 @@ const Login = async (req: Request, res: Response) => {
           message: `erreur de survenue ${error}`,
           status: false,
           field: "error",
-          data: null,
-        })
+          data: {},
+        }),
       )
       .status(201);
   }
@@ -73,18 +76,28 @@ const register = async (req: Request, res: Response) => {
     const user = (await Utility.decrypte(data)) as sigin;
     const password = await bcrypt.hash(user.password, 10);
     const code = await Utility.code(10);
-    await bookMail.sendCode(code, user.email);
     const email = user.email;
+    const queryConfirm =`*[_type == "letter" && type == $type][0]`;
     const query = `*[_type == "User" && email == $email][0]`;
     const findMail = await database.admin.fetch(query, { email: email });
+    const findMessage = await database.admin.fetch(queryConfirm,{type:'messageconfirm'})
+    if(findMessage!==null){
+      const message = findMessage.message
+      .replace('$name',user.email.split('@')[0])
+      .replace('$code',code);
+      await bookMail.sendCode(user.email,message,'Confirmation du Compte')
+    }
+    else{
+      await bookMail.sendCode(user.email,`<div>Bonjour, ${user.email.split('@')[0]},\n veuillez confirme votre compte \n <div>${code}</div></div>`,'Confirmation de compte');
+    }
 
     if (findMail !== null) {
-      res.json(
+     return res.json(
         await Utility.resParams({
-          field: "email",
+          field: "exist",
           status: false,
           message: "email deja inscrire",
-        })
+        }),
       );
     } else {
       const newUser = await database.admin.create({
@@ -92,9 +105,13 @@ const register = async (req: Request, res: Response) => {
         email: user.email,
         password: password,
       });
-      const token = sign({ email: user.email,id:newUser._id }, process.env.SECRET as string, {
-        expiresIn: "2d",
-      });
+      const token = sign(
+        { email: user.email, id: newUser._id },
+        process.env.SECRET as string,
+        {
+          expiresIn: "2d",
+        },
+      );
       const userParams = await database.admin.create({
         _type: "userParams",
         userId: {
@@ -103,12 +120,12 @@ const register = async (req: Request, res: Response) => {
         },
         code: code,
         verify: false,
-        username: (user.username).toUpperCase(),
+        username: user.username.toUpperCase(),
         firstname: user.firstname,
         lastname: user.lastname,
         check: true,
         bio: "",
-        admin: email === "bokyshoping@mail.com" ? true : false,
+        admin: email === "bokyshoping@gmail.com" ? true : false,
       });
       res.json(
         await Utility.resParams({
@@ -118,79 +135,49 @@ const register = async (req: Request, res: Response) => {
           code: code,
           verify: true,
           token: token,
-        })
+        }),
       );
     }
   } catch (error) {
-    res
+    return res
       .json(
         await Utility.resParams({
           message: `erreur de survenue ${error}`,
           status: false,
           field: "error",
-          data: null,
-        })
+          data: {},
+        }),
       )
       .status(201);
   }
 };
 
-const confirm = async (req: Request, res: Response):Promise<any> => {
+const confirm = async (req: Request, res: Response): Promise<any> => {
   try {
     const { data } = req.body;
-    const user = req.user
+    const user = req.user;
     const decrypteData = (await Utility.decrypte(data)) as confirm;
-    const query ='*[_type=="User" && email == $email][0]{...,"set":*[_type=="userParams" && userId._ref == ^._id][0]}';
-    const findUser = await database.admin.fetch(query, { email:user.email});
-    const newUser = findUser as User
-    const params = await database.admin.fetch("*[_type=='userParams' && userId._ref == $userId][0]",{userId:newUser.set?.userId._ref})
-    const newParams = await database.admin.patch(params._id).set({verify:true}).commit();
-    if(newParams)
-    {
-      res.json(
+    const query =
+      '*[_type=="User" && email == $email][0]{...,"set":*[_type=="userParams" && userId._ref == ^._id][0]}';
+    const findUser = await database.admin.fetch(query, { email: user.email });
+    const newUser = findUser as User;
+    const params = await database.admin.fetch(
+      "*[_type=='userParams' && userId._ref == $userId][0]",
+      { userId: newUser.set?.userId._ref },
+    );
+    const newParams = await database.admin
+      .patch(params._id)
+      .set({ verify: true })
+      .commit();
+      return res.json(
         await Utility.resParams({
           message: "confirm",
           field: "confirm",
           status: true,
-          data:findUser
-        })
+          data: findUser,
+        }),
       );
-    }
-     res.json(
-        await Utility.resParams({
-          message: "erreur de confirm",
-          field: "error",
-          status: true,
-        })
-      );
-    
-  } catch (error) {
-     return res
-      .json(
-        await Utility.resParams({
-          message: `erreur survenue${error}`,
-          status: false,
-          field: "error",
-        })
-      )
-      .status(201);
-  }
-};
 
-const getUser = async (req: Request, res: Response) => {
-  try {
-    const user = req.user
-    const query ='*[_type == "User" && email == $email][0]{...,"set":*[_type == "userParams" && userId._ref == ^._id][0]}';
-    const findUser = await database.admin.fetch(query,{email:user.email});
-    if(findUser)
-    {
-      return res.json(
-        await Utility.resParams({ message: "user", status: true, data: findUser,field:'user' })
-      );
-    }
-     return res.json(
-        await Utility.resParams({ message: "empty", status: true,field:'empty', data: null })
-      );
   } catch (error) {
     return res
       .json(
@@ -198,7 +185,45 @@ const getUser = async (req: Request, res: Response) => {
           message: `erreur survenue${error}`,
           status: false,
           field: "error",
-        })
+        }),
+      )
+      .status(201);
+  }
+};
+
+const getUser = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const query =
+      '*[_type == "User" && email == $email][0]{...,"set":*[_type == "userParams" && userId._ref == ^._id][0]}';
+    const findUser = await database.admin.fetch(query, { email: user.email });
+    if (findUser) {
+      return res.json(
+        await Utility.resParams({
+          message: "user",
+          status: true,
+          data: findUser,
+          field: "user",
+        }),
+      );
+    }
+    return res.json(
+      await Utility.resParams({
+        message: "empty",
+        status: true,
+        field: "empty",
+        data: null,
+      }),
+    );
+  } catch (error) {
+    return res
+      .json(
+        await Utility.resParams({
+          message: `erreur survenue${error}`,
+          status: false,
+          field: "error",
+          data: null,
+        }),
       )
       .status(201);
   }
