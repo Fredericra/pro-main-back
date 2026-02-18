@@ -43,6 +43,12 @@ router.post('/messageClient',midelware,message.messageClient);
 router.post('/messageconfirm',midelware,message.messageConfirm);
 router.post('/messageletter',midelware,message.messageLetters);
 router.post('/messageassitance',midelware,message.messageAssitance);
+router.post('/sendMessage',midelware,message.sendLetter)
 
+
+//Caroussel only admin
+router.post('/addimagecarouselle',midelware,upload.array('files'),admincontroller.addImageCarouselle);
+router.get('/getimagecarouselle',admincontroller.getImageCarousel);
+router.post('/deleteimagecarouselle',midelware,admincontroller.deleteImageCarousel);
 
 export default router;

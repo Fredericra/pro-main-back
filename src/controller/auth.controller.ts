@@ -6,7 +6,7 @@ import type { auth } from "../Type";
 import cloudinary from "../Cloud/Cloudinary";
 
 const professional = async (req: Request, res: Response) => {
-  const { nom, phone, place, city, country } = req.body;
+  const { nom, phone,phonecode,country,city,currency,place } = req.body;
   const user = req.user as auth;
   const file = req.file as Express.Multer.File;
   try {
@@ -32,11 +32,12 @@ const professional = async (req: Request, res: Response) => {
         phone: phone,
         place: place,
         city: city,
+        code:phonecode,
         country: country,
         web: "",
         fb: "",
         waths: "",
-        device: "",
+        device: currency,
         type: "",
         article: "",
       });
@@ -75,7 +76,7 @@ const autPro = async (req: Request, res: Response) => {
     const query =
       "*[_type == 'pro' && userId._ref == $userId ][0]{...,'set':*[_type == 'ImgPro' && proId._ref == ^._id ][0]}";
     const findPro = await database.admin.fetch(query, { userId: user.id });
-    if (findPro) {
+    if (findPro!==null) {
       return res
         .json(
           await Utility.resParams({
@@ -126,6 +127,7 @@ const addArticle = async (req: Request, res: Response) => {
     width,
     length,
     device,
+    priceInitial
   } = req.body;
   try {
     const article = await database.admin.create({
@@ -137,6 +139,7 @@ const addArticle = async (req: Request, res: Response) => {
       title: title,
       code: code,
       description: description,
+      priceI:priceInitial,
       price: Number(price),
       device: device,
       quantity: Number(quantity),
@@ -291,7 +294,7 @@ const addPub = async (req: Request, res: Response) => {
       other: [{}],
     });
     if (files) {
-      const Buffers: Buffer[] = [];
+      let Buffers: Buffer[] = [];
       for (let x of files) {
         Buffers.push(x.buffer);
       }
@@ -349,7 +352,7 @@ const getPub = async (req: Request, res: Response) => {
         message: "empty",
         status: false,
         field: "empty",
-        data:[]
+        data:null
       })
     );
   } catch (error) {
@@ -358,7 +361,7 @@ const getPub = async (req: Request, res: Response) => {
         message: `erreur survenue${error}`,
         status: false,
         field: "error",
-        data:[]
+        data:null
       })
     );
   }
@@ -383,7 +386,6 @@ const deletePub = async (req: Request, res: Response) => {
           resource_type: "image",
         });
       }
-
       const pubTrasaction = database.admin.transaction();
       pubTrasaction.delete(id);
       await pubTrasaction.commit();
@@ -406,12 +408,13 @@ const deletePub = async (req: Request, res: Response) => {
         message: `erreur survenue${error}`,
         status: false,
         field: "error",
-        data:[]
+        data:null
       })
     );
   }
 
 };
+
 const authControlleur = {
   professional,
   autPro,

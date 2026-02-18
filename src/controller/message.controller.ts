@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import Utility from "../Utility";
 import database from "../Database/sanity.client";
 import type { auth } from "../Type";
+import bookMail from "../Mail/book";
 
 const functionJuste = async (
   req: Request,
@@ -10,9 +11,9 @@ const functionJuste = async (
 ) => {
     const user = req.user as auth;
     const { message } = req.body;
-    const query = `*[_type == 'letter' && type == ${type}][0]`;
-    const find = await database.admin.fetch(query);
-    console.log(find)
+    const query = `*[_type == "letter" && type == $type][0]`;
+    const test = `*[_type == "letter"]`
+    const find = await database.admin.fetch(query,{type:type});
 
   try {
     if (find!==null) {
@@ -97,12 +98,44 @@ const getAllMessage = async (req: Request, res: Response) => {
     }
 };
 
+const sendLetter = async(req:Request,res:Response)=>{
+  const user = req.user as auth;
+  const { data } = req.body;
+  try {
+    const query = '*[_type == "letter" && type == $type][0]';
+    const find = await database.admin.fetch(query,{type:'messageletter'});
+    if(find!==null){
+      for(let x of data){
+        const { email } = x
+        const message = find.message.replace('$name',email.split('@')[0]);
+        await bookMail.sendCode(email,message,'News Letters')
+      }
+    } 
+      return res.json(
+      await Utility.resParams({
+        status:true,
+        message:'letter',
+        field:'error'
+      })
+    )
+  } catch (error) {
+    return res.json(
+      await Utility.resParams({
+        status:false,
+        message:'error'+error,
+        field:'error'
+      })
+    )
+  }
+}
+
 const message = {
   messageClient,
   messageConfirm,
   messageLetters,
   messageAssitance,
   getAllMessage,
+  sendLetter
 };
 
 export default message;

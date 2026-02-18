@@ -49,8 +49,8 @@ export interface login {
 export interface mail {
     from:string;
     to:string;
-    subject:string;
-    text:string;
+    subject?:string;
+    text?:string;
     html:string
 }
 
