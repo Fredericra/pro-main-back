@@ -23,6 +23,7 @@ router.get('/professionel',midelware,authControlleur.autPro)
 router.post('/article',midelware,upload.array('files'),authControlleur.addArticle)
 router.get('/getarticle',midelware,authControlleur.getArticle)
 router.post('/deletearticle',midelware,authControlleur.deleteArticle)
+router.get('/getallarticle',authControlleur.getAllArticle)
 
 //Publication
 router.post('/publication',midelware,upload.array('files'),authControlleur.addPub);

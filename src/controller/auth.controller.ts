@@ -4,6 +4,7 @@ import uploader from "../Cloud/Uploader.single";
 import database from "../Database/sanity.client";
 import type { auth } from "../Type";
 import cloudinary from "../Cloud/Cloudinary";
+import type { get } from "node:http";
 
 const professional = async (req: Request, res: Response) => {
   const { nom, phone,phonecode,country,city,currency,place } = req.body;
@@ -184,7 +185,21 @@ const addArticle = async (req: Request, res: Response) => {
     );
   }
 };
+const getAllArticle = async(req:Request,res:Response)=>{
+  await Utility.Requete(req,res,async()=>{
+    const query = "*[_type == 'article' ]{...,'user':*[_type == 'User' && _id == ^.userId._ref][0],'pro':*[_type == 'pro' && userId._ref == ^.userId._ref]{...,'set':*[_type == 'ImgPro' && proId._ref == ^._id][0]}[0],'set':*[_type == 'imgAr' && articleId._ref == ^._id]}";
+    const findArticle = await database.admin.fetch(query);
+    return res.json(
+      await Utility.resParams({
+        message: "article trouve",
+        status: true,
+        field: "article",
+        data: findArticle,
+      })
+    ).status(201);
+  })
 
+}
 const getArticle = async (req: Request, res: Response) => {
   const user = req.user as auth;
   try {
@@ -420,6 +435,7 @@ const authControlleur = {
   autPro,
   addArticle,
   getArticle,
+  getAllArticle,
   deleteArticle,
   addPub,
   getPub,
