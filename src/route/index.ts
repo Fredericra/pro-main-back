@@ -5,12 +5,19 @@ import authControlleur from "../controller/auth.controller";
 import multer from "multer";
 import admincontroller from "../controller/admin.controller";
 import message from "../controller/message.controller";
+import folio from "../controller/folio.controller";
 
 
 const router = Router();
 const upload = multer({storage:multer.memoryStorage()})
 //active mode pro
 router.post('/pro',midelware,upload.single('file'),authControlleur.professional)
+
+//ajouter folio profile
+router.post('/addprofilefolio',midelware,upload.single('file'),folio.addprofile)
+router.get('/getprofiles',midelware,folio.getProfiles)
+
+
 //cree article
 //
 router.post('/register',Attemp.register)
