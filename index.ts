@@ -1,8 +1,8 @@
+import  serverless  from 'serverless-http';
 import express,{ type Express } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
 import router from './src/route/index';
-import serverless from 'serverless-http';
 
 
 const App:Express = express();

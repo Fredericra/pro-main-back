@@ -1,5 +1,5 @@
 import App from "..";
 
 export default function handler(req: any, res: any){
-    return App(req,res);
+    res.status(200).json({message: "Hello World!"});
 }
