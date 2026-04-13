@@ -2,7 +2,7 @@ import express,{ type Express } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
 import router from './src/route/index';
-
+import serverless from 'serverless-http';
 
 
 const App:Express = express();
@@ -20,4 +20,4 @@ App.use('/api', router);
 //     console.log(`Server is running on port http://localhost:${PORT}`);
 // })
 
-export default App;
+export default serverless(App);
