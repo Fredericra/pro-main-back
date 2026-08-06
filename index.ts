@@ -1,4 +1,3 @@
-import  serverless  from 'serverless-http';
 import express,{ type Express } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
@@ -14,10 +13,9 @@ App.use(express.json());
 App.use('/api', router);
 
 
-// const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
-// App.listen(PORT, () => {
-//     console.log(`Server is running on port http://localhost:${PORT}`);
-// })
-
-export default serverless(App);
+App.listen(PORT, () => {
+ console.log(`Server is running on port http://localhost:${PORT}`);
+})
+    
